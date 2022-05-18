@@ -15,156 +15,236 @@ namespace LeerExcel
         static void Main(string[] args)
         {
             ////Ruta del fichero Excel
-            string filePath = @"E:\Users\Israel\Downloads\pruebaEntradas.xlsx";
+            //string filePath = @"E:\Users\Israel\Downloads\pruebaEntradas.xlsx";
+            string filePath = "";
+            filePath = args[0];
 
-            //using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read))
-            //{
-            //    System.Text.Encoding.RegisterProvider(System.Text.CodePagesEncodingProvider.Instance);
-            //    using (var reader = ExcelReaderFactory.CreateReader(stream))
-            //    {
+            int Feriados = 0;
+            int Vacaciones = 0;
+            int Enfermedad_corta = 0;
+            int Ausente_sin_aviso = 0;
+            int Entro_tarde = 0;
+            int Accidente = 0;
 
-            //        var result = reader.AsDataSet();
-
-            //        // Ejemplos de acceso a datos
-            //        DataTable table = result.Tables[0];
-            //        DataRow row = table.Rows[0];
-            //        string cell = row[0].ToString();
-            //    }
-            //}
             Plantilla plantillaLinea = new Plantilla();
 
             List<Plantilla> plantilla = new List<Plantilla>();
             string HoraLeida = "";
+            string Observacion = "";
+            string Novedades = "";
             int cantDiasTotales = 0;
             int cantDiasTrabajados = 0;
             int cantDiasNoTrabajados = 0;
-            string NombreDia="", NombreDiaPivot="X";
+            string NombreDia = "", NombreDiaPivot = "X", nombrePlanilla = "";
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             FileInfo existingFile = new FileInfo(filePath);
             using (ExcelPackage package = new ExcelPackage(existingFile))
             {
                 //get the first worksheet in the workbook
                 for (int i = 0; i < package.Workbook.Worksheets.Count; i++)
+                
                 {
-                    plantillaLinea = new Plantilla();
-                    Console.WriteLine("nombre Hoja: "+ package.Workbook.Worksheets[i].Name);
-                    ExcelWorksheet worksheet = package.Workbook.Worksheets[i];
-                    plantillaLinea.CodEmpleado = Int32.Parse(package.Workbook.Worksheets[i].Name);
-                    plantillaLinea.Nombre = worksheet.Cells[5, 1].Value?.ToString().Trim();
-                    int colCount = 15; //worksheet.Dimension.End.Column;  //get Column Count
-                    int rowCount = 51; //worksheet.Dimension.End.Row;     //get row count
-                    cantDiasTotales = 0;
-                    cantDiasTrabajados = 0;
-                    cantDiasNoTrabajados = 0;
-                    for (int row = 7; row <= rowCount; row++)
-                    {
-                        NombreDia = worksheet.Cells[row, 1].Value?.ToString().Trim();
-                        Console.WriteLine("Procesando dia {0}", NombreDia);
-                        if (NombreDiaPivot == NombreDia)
-                        {
-                            NombreDia = NombreDia+"_2";
-                        }
-                        else { 
-                            cantDiasTotales += 1;
-                            HoraLeida = worksheet.Cells[row, 12].Value?.ToString().Trim();
-                            Console.WriteLine("horaLeida: " + HoraLeida);
-                            if (HoraLeida == null)
-                            {
-                                cantDiasNoTrabajados += 1;
-                            }
-                            else
-                            {
-                                cantDiasTrabajados += 1;
-                            }
-                        }
-                        
-                        for (int col = 12; col <= colCount; col++)
-                        {
-                            NombreDiaPivot= worksheet.Cells[row, 1].Value?.ToString().Trim();
+                    if (package.Workbook.Worksheets[i].Name != "Resumen")
+                    { 
+                        NombreDiaPivot = "X";
+                        plantillaLinea = new Plantilla();
+                        Console.WriteLine("nombre Hoja: " + package.Workbook.Worksheets[i].Name);
+                        nombrePlanilla = package.Workbook.Worksheets[i].Name;
+                        ExcelWorksheet worksheet = package.Workbook.Worksheets[i];
 
+                        Feriados = 0;
+                        Vacaciones = 0;
+                        Enfermedad_corta = 0;
+                        Ausente_sin_aviso = 0;
+                        Entro_tarde = 0;
+                        Accidente = 0;
+
+                        plantillaLinea.CodEmpleado = Int32.Parse(package.Workbook.Worksheets[i].Name);
+                        plantillaLinea.Nombre = worksheet.Cells[5, 1].Value?.ToString().Trim();
+                        int colCount = 15; //worksheet.Dimension.End.Column;  //get Column Count
+                        int rowCount = 51; //worksheet.Dimension.End.Row;     //get row count
+                        cantDiasTotales = 0;
+                        cantDiasTrabajados = 0;
+                        cantDiasNoTrabajados = 0;
+                        for (int row = 7; row <= rowCount; row++)
+                        {
+                            NombreDia = worksheet.Cells[row, 1].Value?.ToString().Trim();
+                            if (NombreDia != null && NombreDia.ToUpper() != "DOMINGO")
+                            {
+                                Console.WriteLine("Procesando dia {0}", NombreDia);
+                                if (NombreDiaPivot == NombreDia)
+                                {
+                                    NombreDia = NombreDia + "_2";
+                                }
+                                else
+                                {
+                                    cantDiasTotales += 1;
+                                    HoraLeida = worksheet.Cells[row, 12].Value?.ToString().Trim();
+                                    Observacion = worksheet.Cells[row, 21].Value?.ToString().Trim();
+                                    Novedades = worksheet.Cells[row, 20].Value?.ToString().Trim();
+                                    Console.WriteLine("horaLeida: " + HoraLeida);
+                                    if (HoraLeida == null && (Novedades == null || Observacion == null))
+                                    {
+                                        cantDiasNoTrabajados += 1;
+                                        switch (Novedades)
+                                        {
+                                            case "Vacaciones":
+                                                Vacaciones += 1;
+                                                break;
+                                            case "Enfermedad Corta":
+                                                Enfermedad_corta += 1;
+                                                break;
+                                            case "Feriado":
+                                                Feriados += 1;
+                                                break;
+                                            case "Ausente sin aviso":
+                                                Ausente_sin_aviso += 1;
+                                                break;
+                                            case "Accidente":
+                                                Accidente += 1;
+                                                break;
+                                            case "Entro tarde":
+                                                Entro_tarde += 1;
+                                                break;
+
+                                        }
+                                    }
+                                    else
+                                    {
+                                        cantDiasTrabajados += 1;
+                                    }
+                                }
+
+                                for (int col = 12; col <= colCount; col++)
+                                {
+                                    NombreDiaPivot = worksheet.Cells[row, 1].Value?.ToString().Trim();
+
+                                }
+                            }
                         }
+                        plantillaLinea.TotalDias = cantDiasTotales;
+                        plantillaLinea.DiasNoTrabajados = cantDiasNoTrabajados;
+                        plantillaLinea.DiasTrabajados = cantDiasTrabajados;
+                        plantillaLinea.Vacaciones = Vacaciones;
+                        plantillaLinea.Enfermedad_corta = Enfermedad_corta;
+                        plantillaLinea.Feriados = Feriados;
+                        plantillaLinea.Ausente_sin_aviso = Ausente_sin_aviso;
+                        plantillaLinea.Accidente = Accidente;
+                        plantillaLinea.Entro_tarde = Entro_tarde;
+
+                        plantilla.Add(plantillaLinea);
                     }
-                    plantillaLinea.TotalDias = cantDiasTotales;
-                    plantillaLinea.DiasNoTrabajados = cantDiasNoTrabajados;
-                    plantillaLinea.DiasTrabajados = cantDiasTrabajados;
-                    plantilla.Add(plantillaLinea);
                 }
-               
+                
             }
             var json = JsonSerializer.Serialize(plantilla);
             Console.WriteLine(json);
+
+            GuardaNuevaHojaResumen(filePath, plantilla);
+
+            Console.WriteLine("Proceso terminado, apriete una tecla para finalizar...");
             Console.ReadKey();
         }
 
-        static void Otro()
+
+
+
+        static void GuardaNuevaHojaResumen(string filePath,List<Plantilla> plantilla)
         {
-            var Entradas = new[]
+            using (ExcelPackage excel = new ExcelPackage(filePath))
             {
-                new {
-                    Id = "101", Name = "C++"
+
+                //((Excel.Worksheet)this.Application.ActiveWorkbook.Sheets[4]).Delete();
+                try
+                {
+                    var worksheetA1 = excel.Workbook.Worksheets.SingleOrDefault(x => x.Name == "Resumen");
+                    excel.Workbook.Worksheets.Delete(worksheetA1);
+                    Console.WriteLine("Hoja eliminada");
+                    excel.Save();
                 }
-            };
+                catch (Exception e)
+                {
+                    Console.WriteLine("Error eliminando Hoja: ",e.Message);
+                }
+                
 
-            // Creating an instance
-            // of ExcelPackage
-            ExcelPackage excel = new ExcelPackage();
 
-            // name of the sheet
-            var workSheet = excel.Workbook.Worksheets.Add("Resumen");
+               
 
-            // setting the properties
-            // of the work sheet 
-            workSheet.TabColor = System.Drawing.Color.Black;
-            workSheet.DefaultRowHeight = 12;
 
-            // Setting the properties
-            // of the first row
-            workSheet.Row(1).Height = 20;
-            workSheet.Row(1).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
-            workSheet.Row(1).Style.Font.Bold = true;
+                var workSheet = excel.Workbook.Worksheets.Add("Resumen");
 
-            // Header of the Excel sheet
-            workSheet.Cells[1, 1].Value = "S.No";
-            workSheet.Cells[1, 2].Value = "Id";
-            workSheet.Cells[1, 3].Value = "Name";
+                // setting the properties
+                // of the work sheet 
+                workSheet.TabColor = System.Drawing.Color.Black;
+                workSheet.DefaultRowHeight = 12;
 
-            // Inserting the article data into excel
-            // sheet by using the for each loop
-            // As we have values to the first row 
-            // we will start with second row
-            int recordIndex = 2;
+                // Setting the properties
+                // of the first row
+                workSheet.Row(1).Height = 20;
+                workSheet.Row(1).Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                workSheet.Row(1).Style.Font.Bold = true;
 
-            foreach (var article in Entradas)
-            {
-                workSheet.Cells[recordIndex, 1].Value = (recordIndex - 1).ToString();
-                workSheet.Cells[recordIndex, 2].Value = article.Id;
-                workSheet.Cells[recordIndex, 3].Value = article.Name;
-                recordIndex++;
+                // Header of the Excel sheet
+                workSheet.Cells[1, 1].Value = "S.No";
+                workSheet.Cells[1, 2].Value = "Id";
+                workSheet.Cells[1, 3].Value = "Nombre";
+                workSheet.Cells[1, 4].Value = "DiasTotales";
+                workSheet.Cells[1, 5].Value = "DiasTrabajados";
+                workSheet.Cells[1, 6].Value = "DiasNOTrabajados";
+                workSheet.Cells[1, 7].Value = "Vacaciones";
+                workSheet.Cells[1, 8].Value = "Enfermedad_corta";
+                workSheet.Cells[1, 9].Value = "Feriados";
+                workSheet.Cells[1, 10].Value = "Ausente_sin_aviso";
+                workSheet.Cells[1, 11].Value = "Accidente";
+                workSheet.Cells[1, 12].Value = "Entro_tarde";
+
+
+                // Inserting the article data into excel
+                // sheet by using the for each loop
+                // As we have values to the first row 
+                // we will start with second row
+                int recordIndex = 2;
+
+                foreach (var Plantilla in plantilla)
+                {
+                    workSheet.Cells[recordIndex, 1].Value = (recordIndex - 1).ToString();
+                    workSheet.Cells[recordIndex, 2].Value = Plantilla.CodEmpleado;
+                    workSheet.Cells[recordIndex, 3].Value = Plantilla.Nombre;
+                    workSheet.Cells[recordIndex, 4].Value = Plantilla.TotalDias;
+                    workSheet.Cells[recordIndex, 5].Value = Plantilla.DiasTrabajados;
+                    workSheet.Cells[recordIndex, 6].Value = Plantilla.DiasNoTrabajados;
+                    workSheet.Cells[recordIndex, 7].Value = Plantilla.Vacaciones;
+                    workSheet.Cells[recordIndex, 8].Value = Plantilla.Enfermedad_corta;
+                    workSheet.Cells[recordIndex, 9].Value = Plantilla.Feriados;
+                    workSheet.Cells[recordIndex, 10].Value = Plantilla.Ausente_sin_aviso;
+                    workSheet.Cells[recordIndex, 11].Value = Plantilla.Accidente;
+                    workSheet.Cells[recordIndex, 12].Value = Plantilla.Entro_tarde;
+                    recordIndex++;
+
+                }
+
+                // By default, the column width is not 
+                // set to auto fit for the content
+                // of the range, so we are using
+                // AutoFit() method here. 
+                workSheet.Column(1).AutoFit();
+                workSheet.Column(2).AutoFit();
+                workSheet.Column(3).AutoFit();
+                workSheet.Column(4).AutoFit();
+                workSheet.Column(5).AutoFit();
+                workSheet.Column(6).AutoFit();
+                workSheet.Column(7).AutoFit();
+                workSheet.Column(8).AutoFit();
+                workSheet.Column(9).AutoFit();
+                workSheet.Column(10).AutoFit();
+                workSheet.Column(11).AutoFit();
+                workSheet.Column(12).AutoFit();
+
+                excel.Save();
+              
             }
 
-            // By default, the column width is not 
-            // set to auto fit for the content
-            // of the range, so we are using
-            // AutoFit() method here. 
-            workSheet.Column(1).AutoFit();
-            workSheet.Column(2).AutoFit();
-            workSheet.Column(3).AutoFit();
-
-            // file name with .xlsx extension 
-            string p_strPath = "H:\\geeksforgeeks.xlsx";
-
-            if (File.Exists(p_strPath))
-                File.Delete(p_strPath);
-
-            // Create excel file on physical disk 
-            FileStream objFileStrm = File.Create(p_strPath);
-            objFileStrm.Close();
-
-            // Write content to excel file 
-            File.WriteAllBytes(p_strPath, excel.GetAsByteArray());
-            //Close Excel package
-            excel.Dispose();
-            Console.ReadKey();
 
         }
     }
