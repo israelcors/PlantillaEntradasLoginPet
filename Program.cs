@@ -15,9 +15,9 @@ namespace LeerExcel
         static void Main(string[] args)
         {
             ////Ruta del fichero Excel
-            //string filePath = @"E:\Users\Israel\Downloads\pruebaEntradas.xlsx";
-            string filePath = "";
-            filePath = args[0];
+            string filePath = @"C:\Users\Israel\source\repos\LeerExcel\bin\Release\net5.0\detalleEntrada.xlsx";
+            //string filePath = "";
+            //filePath = args[0];
 
             int Feriados = 0;
             int Vacaciones = 0;
@@ -37,7 +37,7 @@ namespace LeerExcel
             int cantDiasNoTrabajados = 0;
             string NombreDia = "", NombreDiaPivot = "X", nombrePlanilla = "";
             ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
-            FileInfo existingFile = new FileInfo(filePath);
+             FileInfo existingFile = new FileInfo(filePath);
             using (ExcelPackage package = new ExcelPackage(existingFile))
             {
                 //get the first worksheet in the workbook
@@ -69,7 +69,7 @@ namespace LeerExcel
                         for (int row = 7; row <= rowCount; row++)
                         {
                             NombreDia = worksheet.Cells[row, 1].Value?.ToString().Trim();
-                            if (NombreDia != null && NombreDia.ToUpper() != "DOMINGO")
+                            if (EsDiaSemana(NombreDia) && NombreDia.ToUpper() != "DOMINGO")
                             {
                                 Console.WriteLine("Procesando dia {0}", NombreDia);
                                 if (NombreDiaPivot == NombreDia)
@@ -115,11 +115,9 @@ namespace LeerExcel
                                     }
                                 }
 
-                                for (int col = 12; col <= colCount; col++)
-                                {
-                                    NombreDiaPivot = worksheet.Cells[row, 1].Value?.ToString().Trim();
 
-                                }
+                            NombreDiaPivot = worksheet.Cells[row, 1].Value?.ToString().Trim();
+
                             }
                         }
                         plantillaLinea.TotalDias = cantDiasTotales;
@@ -147,7 +145,25 @@ namespace LeerExcel
         }
 
 
-
+        static bool EsDiaSemana(string nombreDia)
+        {
+            if (nombreDia is null)
+                return false;
+            if ((nombreDia == "LUNES") ||
+                    (nombreDia == "MARTES") ||
+                    (nombreDia == "MIÉRCOLES") ||
+                    (nombreDia == "JUEVES") ||
+                    (nombreDia == "VIERNES") ||
+                    (nombreDia == "SÁBADO") ||
+                    (nombreDia == "DOMINGO"))
+                    {
+                        return true;
+                    }
+            else
+            {
+                return false;
+            }
+        }
 
         static void GuardaNuevaHojaResumen(string filePath,List<Plantilla> plantilla)
         {
@@ -157,10 +173,17 @@ namespace LeerExcel
                 //((Excel.Worksheet)this.Application.ActiveWorkbook.Sheets[4]).Delete();
                 try
                 {
-                    var worksheetA1 = excel.Workbook.Worksheets.SingleOrDefault(x => x.Name == "Resumen");
-                    excel.Workbook.Worksheets.Delete(worksheetA1);
-                    Console.WriteLine("Hoja eliminada");
-                    excel.Save();
+                    ExcelWorksheet worksheetA1 = excel.Workbook.Worksheets.SingleOrDefault(x => x.Name == "Resumen");
+                    if (worksheetA1 != null)
+                    { 
+                        excel.Workbook.Worksheets.Delete(worksheetA1);
+                        Console.WriteLine("Hoja eliminada");
+                        excel.Save();
+                    }
+                    else
+                    {
+                        excel.Save();
+                    }
                 }
                 catch (Exception e)
                 {
